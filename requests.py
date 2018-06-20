@@ -11,7 +11,7 @@ except ImportError:
     import urllib.parse as urlparse
     from urllib.parse import urlencode
     import urllib.request as urllib2
-    import httplib.client as httplib
+    import http.client as httplib
 
 # configurations
 socket_scheme = "+unix"
