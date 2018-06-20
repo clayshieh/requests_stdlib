@@ -124,6 +124,9 @@ def base_request(method, url, params=None, headers=None, data=None, json=None):
     }
 
     # process data
+    if data:
+        data = urlencode(data)
+
     if json:
         _headers["Content-Type"] = "application/json"
         data = JSON.dumps(json)
