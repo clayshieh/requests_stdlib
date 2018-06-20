@@ -78,11 +78,8 @@ class RequestResponse(object):
         self.status_code = response.getcode()
         self.url = response.geturl()
         self.headers = dict(response.info())
-        
-        if isinstance(response, urllib2.HTTPError):
-            self.text = response.reason
-        else:
-            self.text = response.read()
+        self.text = response.read()
+
         self._json = None
 
         response.close()
