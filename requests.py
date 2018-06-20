@@ -78,14 +78,27 @@ class RequestResponse(object):
         self.status_code = response.getcode()
         self.url = response.geturl()
         self.headers = response.headers.dict
+        
         if isinstance(response, urllib2.HTTPError):
             self.text = response.reason
         else:
             self.text = response.read()
+        self._json = None
+
         response.close()
 
+    def __getitem__(self, key):
+        if not self._json:
+            return self.json()[key]
+
     def json(self):
-        return json.loads(self.text)
+        if not self._json:
+            self._json = json.loads(self.text)
+        return self._json
+
+    def keys(self):
+        if not self._json:
+            return self.json().keys()
 
 def base_request(method, url, params=None, headers=None, data=None):
     # process url
