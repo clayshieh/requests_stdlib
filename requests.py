@@ -1,4 +1,4 @@
-import json
+import json as JSON
 import socket
 
 # python 2/3 compatibility
@@ -60,9 +60,9 @@ class CustomHTTPHandler(urllib2.HTTPHandler):
     """
 
     def http_open(self, req):
-        def genericHTTPConnection(host, port=None, strict=None, timeout=0):
+        def customHTTPConnection(host, port=None, strict=None, timeout=0):
             return UnixHTTPConnection(req._socket_path)
-        return self.do_open(genericHTTPConnection, req)
+        return self.do_open(customHTTPConnection, req)
 
 
 # Requests code
@@ -93,14 +93,15 @@ class RequestResponse(object):
 
     def json(self):
         if not self._json:
-            self._json = json.loads(self.text)
+            self._json = JSON.loads(self.text)
         return self._json
 
     def keys(self):
         if not self._json:
             return self.json().keys()
 
-def base_request(method, url, params=None, headers=None, data=None):
+
+def base_request(method, url, params=None, headers=None, data=None, json=None):
     # process url
     if params:
         query = urlencode(params)
@@ -117,30 +118,35 @@ def base_request(method, url, params=None, headers=None, data=None):
         original_scheme = url_parts.scheme.replace(socket_scheme, "")
         url = url_parts._replace(scheme=original_scheme, netloc="localhost").geturl()
 
-    # process headers
-    if not headers:
-        headers = {}
+    # default headers
+    _headers = {
+        "Accept": "*/*"
+    }
 
     # process data
-    if not data:
-        data = {}
+    if json:
+        _headers["Content-Type"] = "application/json"
+        data = JSON.dumps(json)
 
+    # process headers
+    if headers:
+        _headers.update(headers)
+    
     # get request obj
-    request_obj = None
     if data:
-        request_obj = urllib2.Request(url, data=json.dumps(data), headers=headers)
-    request_obj = urllib2.Request(url, headers=headers)
+        request_obj = urllib2.Request(url, data=data, headers=_headers)
+    else:
+        request_obj = urllib2.Request(url, headers=_headers)
 
     # process method
     request_obj.get_method = lambda: method
 
     # piggyback socket_path on request object
-    if is_sock:
-        request_obj._socket_path = socket_path
+    request_obj._socket_path = socket_path
 
     # make http(s) connection
     try:
-        if is_sock:
+        if socket_path:
             response = urllib2.build_opener(CustomHTTPHandler).open(request_obj)
         else:
             response = urllib2.urlopen(request_obj)
@@ -149,19 +155,19 @@ def base_request(method, url, params=None, headers=None, data=None):
 
     return RequestResponse(request_obj, response)
 
-def get(url, params=None, headers=None, data=None):
-    return base_request("GET", url, params=params, headers=headers, data=data)
+
+def get(url, params=None, headers=None, data=None, json=None):
+    return base_request("GET", url, params=params, headers=headers, data=data, json=json)
 
 
-def post(url, params=None, headers=None, data=None):
-    return base_request("POST", url, params=params, headers=headers, data=data)
+def post(url, params=None, headers=None, data=None, json=None):
+    return base_request("POST", url, params=params, headers=headers, data=data, json=json)
 
 
-def delete(url, params=None, headers=None, data=None):
-    return base_request("DELETE", url, params=params, headers=headers, data=data)
+def delete(url, params=None, headers=None, data=None, json=None):
+    return base_request("DELETE", url, params=params, headers=headers, data=data, json=json)
 
 
-def put(url, params=None, headers=None, data=None):
-    return base_request("PUT", url, params=params, headers=headers, data=data)
-
+def put(url, params=None, headers=None, data=None, json=None):
+    return base_request("PUT", url, params=params, headers=headers, data=data, json=json)
 
