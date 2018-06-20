@@ -1,17 +1,24 @@
-import urllib
-import urllib2
-import urlparse
 import json
-import httplib
 import socket
 
+# python 2/3 compatibility
+try:
+    import urlparse
+    from urllib import urlencode
+    import urllib2
+    import httplib
+except ImportError:
+    import urllib.parse as urlparse
+    from urllib.parse import urlencode
+    import urllib.request as urllib2
+    import httplib.client as httplib
 
 # configurations
 socket_scheme = "+unix"
 
 
 # UNIX socket code
-# referrenced from https://github.com/docker/docker-py/blob/master/docker/transport/unixconn.py
+# referenced from https://github.com/docker/docker-py/blob/master/docker/transport/unixconn.py
 class UnixHTTPResponse(httplib.HTTPResponse, object):
     def __init__(self, sock, *args, **kwargs):
         disable_buffering = kwargs.pop('disable_buffering', False)
@@ -62,6 +69,10 @@ class CustomHTTPHandler(urllib2.HTTPHandler):
 
 
 class RequestResponse(object):
+    """
+    Request response object that wraps urllib2 response object to mimic requests library.
+    """
+
     def __init__(self, response):
         self.status_code = response.getcode()
         self.url = response.geturl()
@@ -78,7 +89,7 @@ class RequestResponse(object):
 def base_request(method, url, params=None, headers=None, data=None):
     # process url
     if params:
-        query = urllib.urlencode(params)
+        query = urlencode(params)
         url += "?" + query
 
     # process if socket
