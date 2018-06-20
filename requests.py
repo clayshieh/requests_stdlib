@@ -73,7 +73,8 @@ class RequestResponse(object):
     Request response object that wraps urllib2 response object to mimic requests library.
     """
 
-    def __init__(self, response):
+    def __init__(self, request, response):
+        self.request = request
         self.status_code = response.getcode()
         self.url = response.geturl()
         self.headers = response.headers.dict
@@ -131,9 +132,9 @@ def base_request(method, url, params=None, headers=None, data=None):
         else:
             response = urllib2.urlopen(request_obj)
     except urllib2.HTTPError as e:
-        return RequestResponse(e)
+        return RequestResponse(request_obj, e)
 
-    return RequestResponse(response)
+    return RequestResponse(request_obj, response)
 
 def get(url, params=None, headers=None, data=None):
     return base_request("GET", url, params=params, headers=headers, data=data)
