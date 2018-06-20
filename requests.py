@@ -77,7 +77,7 @@ class RequestResponse(object):
         self.request = request
         self.status_code = response.getcode()
         self.url = response.geturl()
-        self.headers = response.headers.dict
+        self.headers = dict(response.info())
         
         if isinstance(response, urllib2.HTTPError):
             self.text = response.reason
